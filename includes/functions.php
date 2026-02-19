@@ -969,7 +969,7 @@ function mattress_advisor_is_form_complete($form_data) {
     $height = intval($form_data['height']);
     $weight = intval($form_data['weight']);
     
-    if ($age < 5 || $age > 99 || $height < 40 || $height > 230 || $weight < 5 || $weight > 10) {
+    if ($age < 2 || $age > 100 || $height < 1 || $height > 200 || $weight < 5 || $weight > 110) {
         return false;
     }
     

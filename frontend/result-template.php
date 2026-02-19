@@ -222,40 +222,6 @@ function mattress_advisor_render_result( $product, $form_data, $related_products
             <?php endif; endif; ?>
         </div>
 
-        <!-- Compatibility Score -->
-        <div class="compatibility-section">
-            <h3 class="section-title">میزان تطبیق</h3>
-            <div class="compatibility-score">
-                <div class="score-circle">
-                    <div class="score-fill" data-score="88"></div>
-                    <span class="score-text">88%</span>
-                </div>
-                <div class="score-details">
-                    <div class="score-item">
-                        <span class="score-label">تشک اکتیو</span>
-                        <div class="score-bar">
-                            <div class="score-progress" style="width: 95%"></div>
-                        </div>
-                        <span class="score-value">95%</span>
-                    </div>
-                    <div class="score-item">
-                        <span class="score-label">تشک پریمیوم</span>
-                        <div class="score-bar">
-                            <div class="score-progress" style="width: 85%"></div>
-                        </div>
-                        <span class="score-value">85%</span>
-                    </div>
-                    <div class="score-item">
-                        <span class="score-label">تشک اکونومی</span>
-                        <div class="score-bar">
-                            <div class="score-progress" style="width: 75%"></div>
-                        </div>
-                        <span class="score-value">75%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <?php 
         // Control showing recommended/related products via settings
         $show_recommendation = true;

@@ -5,10 +5,10 @@ jQuery(document).ready(function($) {
     function getAgeStage(age) {
         const a = parseInt(age, 10);
         if (isNaN(a)) return { key: '', label: '' };
-        if (a >= 5 && a <= 17) return { key: 'teen', label: 'نوجوان' };
+        if (a >= 2 && a <= 17) return { key: 'teen', label: 'نوجوان' };
         if (a >= 18 && a <= 29) return { key: 'young', label: 'جوان' };
         if (a >= 30 && a <= 49) return { key: 'middle_age', label: 'میانسال' };
-        if (a >= 50 && a <= 99) return { key: 'adult', label: 'بزرگسال' };
+        if (a >= 50 && a <= 100) return { key: 'adult', label: 'بزرگسال' };
         return { key: '', label: '' };
     }
 
