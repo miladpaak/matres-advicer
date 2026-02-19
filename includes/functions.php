@@ -99,10 +99,12 @@ function mattress_advisor_update_rule() {
     $table = $wpdb->prefix . 'mattress_rules';
     
     $rule_id = isset($_POST['rule_id']) ? intval($_POST['rule_id']) : 0;
-    $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+    $product_ids = isset($_POST['product_ids']) && is_array($_POST['product_ids']) ? array_map('intval', $_POST['product_ids']) : [];
+    $product_ids = array_values(array_filter($product_ids));
+    $product_id = !empty($product_ids) ? $product_ids[0] : 0;
     
-    if (!$rule_id || !$product_id) {
-        wp_send_json_error(['message' => 'شناسه قانون و محصول الزامی است.']);
+    if (!$rule_id || empty($product_ids)) {
+        wp_send_json_error(['message' => 'شناسه قانون و حداقل یک محصول الزامی است.']);
     }
 
     // Define the fields that make up a rule's conditions
@@ -117,6 +119,30 @@ function mattress_advisor_update_rule() {
         if (isset($_POST[$key]) && $_POST[$key] !== '') {
             $conditions[sanitize_key($key)] = sanitize_text_field($_POST[$key]);
         }
+    }
+
+    $conditions['product_ids'] = $product_ids;
+
+    $range_limits = [
+        'age_min' => [2, 100],
+        'age_max' => [2, 100],
+        'height_min' => [1, 200],
+        'height_max' => [1, 200],
+        'weight_min' => [5, 110],
+        'weight_max' => [5, 110],
+    ];
+    foreach ($range_limits as $key => $limits) {
+        if (isset($conditions[$key])) {
+            $v = intval($conditions[$key]);
+            if ($v < $limits[0] || $v > $limits[1]) {
+                wp_send_json_error(['message' => 'مقدار ' . $key . ' خارج از بازه مجاز است.']);
+            }
+            $conditions[$key] = $v;
+        }
+    }
+
+    if (isset($conditions['back_curve']) && !in_array($conditions['back_curve'], ['has', 'no'], true)) {
+        wp_send_json_error(['message' => 'مقدار گودی کمر معتبر نیست.']);
     }
 
     // Prepare the final data for database insertion, ensuring all parts are sanitized.
@@ -169,7 +195,7 @@ function mattress_advisor_process_form() {
         $matched = true;
         foreach ($conditions as $key => $value) {
             // Skip range keys, they are handled with their base keys
-            if (in_array($key, ['age_min', 'age_max', 'height_min', 'height_max', 'weight_min', 'weight_max'])) {
+            if (in_array($key, ['age_min', 'age_max', 'height_min', 'height_max', 'weight_min', 'weight_max', 'product_ids'], true)) {
                 continue;
             }
 
@@ -428,7 +454,7 @@ function mattress_advisor_export_submissions() {
 
     // Helper for Persian mapping
     $value_maps = [
-        'back_curve' => ['has_curve' => 'دارم (مناسب گودی کمر)', 'supports_curve' => 'تشک مناسب گودی کمر', 'not_allowed' => 'خرید مجاز نیست', 'کم' => 'کم', 'متوسط' => 'متوسط', 'زیاد' => 'زیاد'],
+        'back_curve' => ['has' => 'دارم', 'no' => 'ندارم', 'has_curve' => 'دارم', 'supports_curve' => 'دارم', 'not_allowed' => 'ندارم', 'کم' => 'دارم', 'متوسط' => 'دارم', 'زیاد' => 'دارم'],
         'sleep_type' => ['light' => 'سبک', 'heavy' => 'سنگین'],
         'persons' => ['1' => 'یک نفره', '2' => 'دو نفره'],
         'quality' => ['excellent' => 'عالی (درجه یک)', 'good' => 'مطلوب (درجه دو)'],
@@ -630,8 +656,8 @@ function mattress_advisor_normalize_value( $key, $value ) {
             $map = [ 'نوجوان' => 'teen', 'teen' => 'teen', 'جوان' => 'young', 'young' => 'young', 'میانسال' => 'middle_age', 'middle_age' => 'middle_age', 'بزرگسال' => 'adult', 'adult' => 'adult' ];
             return isset($map[$val]) ? $map[$val] : $val;
         case 'back_curve':
-            // Map legacy Persian descriptors to canonical choices
-            $map = [ 'کم' => 'supports_curve', 'متوسط' => 'supports_curve', 'زیاد' => 'has_curve', 'has_curve' => 'has_curve', 'supports_curve' => 'supports_curve', 'not_allowed' => 'not_allowed' ];
+            // Map legacy values to canonical choices
+            $map = [ 'کم' => 'has', 'متوسط' => 'has', 'زیاد' => 'has', 'has_curve' => 'has', 'supports_curve' => 'has', 'not_allowed' => 'no', 'دارم' => 'has', 'ندارم' => 'no', 'has' => 'has', 'no' => 'no' ];
             return isset($map[$val]) ? $map[$val] : $val;
         default:
             return $val_lc;
@@ -693,19 +719,30 @@ function mattress_advisor_add_rule() {
     $table = $wpdb->prefix . 'mattress_rules';
     
     // Get form data directly from $_POST since it's serialized
-    $product_id = intval($_POST['product_id']);
-    if ( !$product_id || !wc_get_product($product_id) ) {
-        wp_send_json_error(['message' => 'محصول انتخاب شده معتبر نیست.']);
+    $product_ids = isset($_POST['product_ids']) && is_array($_POST['product_ids']) ? array_map('intval', $_POST['product_ids']) : [];
+    $product_ids = array_values(array_filter($product_ids));
+    $product_id = !empty($product_ids) ? $product_ids[0] : 0;
+
+    if ( empty($product_ids) ) {
+        wp_send_json_error(['message' => 'حداقل یک محصول انتخاب کنید.']);
+    }
+
+    foreach ($product_ids as $pid) {
+        if (!$pid || !wc_get_product($pid)) {
+            wp_send_json_error(['message' => 'یکی از محصولات انتخاب‌شده معتبر نیست.']);
+        }
     }
 
     $conditions = [];
     
     // Process all form fields except product_id, action, nonce, key_features, and why_suitable
     foreach ($_POST as $key => $value) {
-        if ( !in_array($key, ['product_id', 'action', 'nonce', 'key_features', 'why_suitable']) && !empty($value) ) {
+        if ( !in_array($key, ['product_id', 'product_ids', 'product_category', 'action', 'nonce', 'key_features', 'why_suitable']) && !empty($value) ) {
             $conditions[sanitize_key($key)] = sanitize_text_field($value);
         }
     }
+
+    $conditions['product_ids'] = $product_ids;
 
     if (empty($conditions)) {
         wp_send_json_error(['message' => 'حداقل یک شرط باید تعیین شود.']);
@@ -722,6 +759,29 @@ function mattress_advisor_add_rule() {
         if (in_array($k, $allowed_keys, true)) {
             $filtered[$k] = $v;
         }
+    }
+    $filtered['product_ids'] = $product_ids;
+
+    $range_limits = [
+        'age_min' => [2, 100],
+        'age_max' => [2, 100],
+        'height_min' => [1, 200],
+        'height_max' => [1, 200],
+        'weight_min' => [5, 110],
+        'weight_max' => [5, 110],
+    ];
+    foreach ($range_limits as $key => $limits) {
+        if (isset($filtered[$key])) {
+            $v = intval($filtered[$key]);
+            if ($v < $limits[0] || $v > $limits[1]) {
+                wp_send_json_error(['message' => 'مقدار ' . $key . ' خارج از بازه مجاز است.']);
+            }
+            $filtered[$key] = $v;
+        }
+    }
+
+    if (isset($filtered['back_curve']) && !in_array($filtered['back_curve'], ['has', 'no'], true)) {
+        wp_send_json_error(['message' => 'مقدار گودی کمر معتبر نیست.']);
     }
 
     // Get key features and why suitable

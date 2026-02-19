@@ -1,4 +1,32 @@
 jQuery(document).ready(function($) {
+    function filterProductsByCategory(categorySelector, productsSelector) {
+        var categoryId = $(categorySelector).val();
+        var hasVisible = false;
+
+        $(productsSelector + ' option').each(function() {
+            var categoryIds = (($(this).data('category-ids') || '') + '').split(',').filter(Boolean);
+            var visible = categoryId && categoryIds.indexOf(categoryId) !== -1;
+            $(this).prop('hidden', !visible);
+            if (!visible) {
+                $(this).prop('selected', false);
+            }
+            if (visible) {
+                hasVisible = true;
+            }
+        });
+
+        $(productsSelector).prop('disabled', !categoryId || !hasVisible);
+    }
+
+    $('#product_ids, #edit_product_ids').prop('disabled', true);
+    $('#product_ids option, #edit_product_ids option').prop('hidden', true);
+    $('#product_category').on('change', function() {
+        filterProductsByCategory('#product_category', '#product_ids');
+    });
+    $('#edit_product_category').on('change', function() {
+        filterProductsByCategory('#edit_product_category', '#edit_product_ids');
+    });
+
     // Tab functionality
     $('.tab-button').on('click', function(e) {
         e.preventDefault();
@@ -65,7 +93,7 @@ jQuery(document).ready(function($) {
                 
                 // Populate edit form
                 $('#edit-rule-id').val(rule.id);
-                $('#edit_product_id').val(rule.product_id);
+                $('#edit_product_ids option').prop('selected', false);
                 
                 // Prefer parsing conditions JSON to populate fields
                 try {
@@ -78,6 +106,31 @@ jQuery(document).ready(function($) {
                     ['age_min','age_max','height_min','height_max','weight_min','weight_max',
                      'back_curve','sleep_type','persons','quality','elasticity','back_pain',
                      'usage_type','usage_place','age_stage'].forEach(setIf);
+
+                    var selectedProducts = [];
+                    if (Array.isArray(conds.product_ids)) {
+                        selectedProducts = conds.product_ids.map(function(v) { return String(v); });
+                    } else if (rule.product_id) {
+                        selectedProducts = [String(rule.product_id)];
+                    }
+
+                    var firstCategory = '';
+                    $('#edit_product_ids option').each(function() {
+                        var isSelected = selectedProducts.indexOf(String($(this).val())) !== -1;
+                        $(this).prop('selected', isSelected);
+                        if (!firstCategory && isSelected) {
+                            firstCategory = ((($(this).data('category-ids') || '') + '').split(',').filter(Boolean)[0]) || '';
+                        }
+                    });
+
+                    if (firstCategory) {
+                        $('#edit_product_category').val(firstCategory).trigger('change');
+                        $('#edit_product_ids option').each(function() {
+                            if (selectedProducts.indexOf(String($(this).val())) !== -1) {
+                                $(this).prop('selected', true);
+                            }
+                        });
+                    }
                 } catch (e) {
                     // Fallback to legacy fields on rule object if present
                     $('#edit_back_curve').val(rule.back_curve);
