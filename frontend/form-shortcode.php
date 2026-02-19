@@ -285,9 +285,8 @@ function mattress_advisor_form_shortcode() {
                         <img class="field-icon" src="<?php echo esc_url( MATTRESS_ADVISOR_URL . 'assets/' . rawurlencode('Waist-hollow.webp') ); ?>" alt="گودی کمر" loading="lazy">
                         <label>گودی کمر <span class="required">*</span></label>
                         <div class="form-options" role="radiogroup" aria-label="گودی کمر">
-                            <label class="option"><input type="radio" name="back_curve" value="has_curve" required> <span class="option-label">مناسب افرادی که گودی کمر دارند</span></label>
-                            <label class="option"><input type="radio" name="back_curve" value="not_allowed" required> <span class="option-label">در صورت داشتن گودی کمر خرید مجاز نیست</span></label>
-                            <label class="option"><input type="radio" name="back_curve" value="supports_curve" required> <span class="option-label">مناسب افرادی که گودی کمر دارند</span></label>
+                            <label class="option"><input type="radio" name="back_curve" value="has" required> <span class="option-label">دارم</span></label>
+                            <label class="option"><input type="radio" name="back_curve" value="no" required> <span class="option-label">ندارم</span></label>
                         </div>
                     </div>
                     

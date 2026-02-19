@@ -65,8 +65,13 @@ function mattress_advisor_rules_page() {
 
     // get products
     $products = [];
+    $product_categories = [];
     if ( function_exists('wc_get_products') ) {
         $products = wc_get_products(['limit' => -1]);
+        $product_categories = get_terms([
+            'taxonomy'   => 'product_cat',
+            'hide_empty' => false,
+        ]);
     }
 
     ?>
@@ -128,7 +133,24 @@ function mattress_advisor_rules_page() {
                                 
                                 <div class="rule-product">
                                     <h4>محصول پیشنهادی:</h4>
-                                    <p><strong><?php echo esc_html(get_the_title($rule->product_id)); ?></strong></p>
+                                    <?php
+                                        $conditions_for_products = json_decode($rule->conditions, true);
+                                        $selected_products = [];
+                                        if (!empty($conditions_for_products['product_ids']) && is_array($conditions_for_products['product_ids'])) {
+                                            $selected_products = array_map('intval', $conditions_for_products['product_ids']);
+                                        }
+                                        if (empty($selected_products) && !empty($rule->product_id)) {
+                                            $selected_products[] = (int) $rule->product_id;
+                                        }
+                                        $product_titles = [];
+                                        foreach ($selected_products as $selected_product_id) {
+                                            $title = get_the_title($selected_product_id);
+                                            if (!empty($title)) {
+                                                $product_titles[] = $title;
+                                            }
+                                        }
+                                    ?>
+                                    <p><strong><?php echo esc_html(implode('، ', $product_titles)); ?></strong></p>
                                 </div>
                                 
                                 <div class="rule-conditions">
@@ -148,7 +170,8 @@ function mattress_advisor_rules_page() {
                                                 'back_pain' => 'مشکل کمر',
                                                 'usage_type' => 'نوع استفاده',
                                                 'usage_place' => 'نوع کاربرد',
-                                                'age_stage' => 'مقطع سنی'
+                                                'age_stage' => 'مقطع سنی',
+                                                'product_ids' => 'محصولات'
                                             ];
                                             // Merge numeric ranges for display
                                             $ranges = [
@@ -196,6 +219,9 @@ function mattress_advisor_rules_page() {
                                                     unset($conditions[$nk]);
                                                 }
                                             }
+                                            if (!empty($conditions['product_ids']) && is_array($conditions['product_ids'])) {
+                                                unset($conditions['product_ids']);
+                                            }
                                             foreach($conditions as $key => $val) {
                                                 if (!empty($val)) {
                                                     $label = isset($condition_labels[$key]) ? $condition_labels[$key] : $key;
@@ -235,13 +261,21 @@ function mattress_advisor_rules_page() {
                     <div class="form-section">
                         <h3><span class="dashicons dashicons-products"></span> انتخاب محصول</h3>
                         <div class="form-group">
-                            <label for="edit_product_id">محصول پیشنهادی *</label>
-                            <select name="product_id" id="edit_product_id" required>
-                                <option value="">یک محصول را انتخاب کنید</option>
-                                <?php foreach($products as $product): ?>
-                                    <option value="<?php echo $product->get_id(); ?>"><?php echo $product->get_name(); ?></option>
+                            <label for="edit_product_category">دسته‌بندی محصول *</label>
+                            <select id="edit_product_category" class="product-category-select" required>
+                                <option value="">ابتدا دسته‌بندی را انتخاب کنید</option>
+                                <?php foreach($product_categories as $category): ?>
+                                    <option value="<?php echo esc_attr($category->term_id); ?>"><?php echo esc_html($category->name); ?></option>
                                 <?php endforeach; ?>
                             </select>
+                            <label for="edit_product_ids" style="margin-top:10px;display:block;">محصولات پیشنهادی * (چند انتخابی)</label>
+                            <select name="product_ids[]" id="edit_product_ids" class="product-multi-select" multiple required size="8">
+                                <?php foreach($products as $product): ?>
+                                    <?php $category_ids = wc_get_product_term_ids($product->get_id(), 'product_cat'); ?>
+                                    <option value="<?php echo $product->get_id(); ?>" data-category-ids="<?php echo esc_attr(implode(',', $category_ids)); ?>"><?php echo esc_html($product->get_name()); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small>برای انتخاب چند محصول از کلید Ctrl (یا Command) استفاده کنید.</small>
                         </div>
                     </div>
 
@@ -252,22 +286,22 @@ function mattress_advisor_rules_page() {
                             <div class="form-group">
                                 <label>سن (بازه)</label>
                                 <div class="range-row">
-                                    <input type="number" name="age_min" min="1" max="120" placeholder="حداقل">
-                                    <input type="number" name="age_max" min="1" max="120" placeholder="حداکثر">
+                                    <input type="number" name="age_min" min="2" max="100" placeholder="حداقل">
+                                    <input type="number" name="age_max" min="2" max="100" placeholder="حداکثر">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label>قد (سانتی‌متر، بازه)</label>
                                 <div class="range-row">
-                                    <input type="number" name="height_min" min="100" max="250" placeholder="حداقل">
-                                    <input type="number" name="height_max" min="100" max="250" placeholder="حداکثر">
+                                    <input type="number" name="height_min" min="1" max="200" placeholder="حداقل">
+                                    <input type="number" name="height_max" min="1" max="200" placeholder="حداکثر">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label>وزن (کیلوگرم، بازه)</label>
                                 <div class="range-row">
-                                    <input type="number" name="weight_min" min="30" max="200" placeholder="حداقل">
-                                    <input type="number" name="weight_max" min="30" max="200" placeholder="حداکثر">
+                                    <input type="number" name="weight_min" min="5" max="110" placeholder="حداقل">
+                                    <input type="number" name="weight_max" min="5" max="110" placeholder="حداکثر">
                                 </div>
                             </div>
                         </div>
@@ -281,9 +315,8 @@ function mattress_advisor_rules_page() {
                                 <label for="edit_back_curve">گودی کمر</label>
                                 <select name="back_curve" id="edit_back_curve">
                                     <option value="">انتخاب کنید</option>
-                                    <option value="has_curve">دارم</option>
-                                    <option value="supports_curve">تشکِ مناسب گودی کمر</option>
-                                    <option value="not_allowed">خرید مجاز نیست</option>
+                                    <option value="has">دارم</option>
+                                    <option value="no">ندارم</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -408,13 +441,21 @@ function mattress_advisor_rules_page() {
                     <div class="form-section">
                         <h3><span class="dashicons dashicons-products"></span> انتخاب محصول</h3>
                         <div class="form-group">
-                            <label for="product_id">محصول پیشنهادی *</label>
-                            <select name="product_id" id="product_id" required>
-                                <option value="">یک محصول را انتخاب کنید</option>
-                                <?php foreach($products as $product): ?>
-                                    <option value="<?php echo $product->get_id(); ?>"><?php echo $product->get_name(); ?></option>
+                            <label for="product_category">دسته‌بندی محصول *</label>
+                            <select id="product_category" class="product-category-select" required>
+                                <option value="">ابتدا دسته‌بندی را انتخاب کنید</option>
+                                <?php foreach($product_categories as $category): ?>
+                                    <option value="<?php echo esc_attr($category->term_id); ?>"><?php echo esc_html($category->name); ?></option>
                                 <?php endforeach; ?>
                             </select>
+                            <label for="product_ids" style="margin-top:10px;display:block;">محصولات پیشنهادی * (چند انتخابی)</label>
+                            <select name="product_ids[]" id="product_ids" class="product-multi-select" multiple required size="8">
+                                <?php foreach($products as $product): ?>
+                                    <?php $category_ids = wc_get_product_term_ids($product->get_id(), 'product_cat'); ?>
+                                    <option value="<?php echo $product->get_id(); ?>" data-category-ids="<?php echo esc_attr(implode(',', $category_ids)); ?>"><?php echo esc_html($product->get_name()); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small>برای انتخاب چند محصول از کلید Ctrl (یا Command) استفاده کنید.</small>
                         </div>
                     </div>
 
@@ -425,22 +466,22 @@ function mattress_advisor_rules_page() {
                             <div class="form-group">
                                 <label>سن (بازه)</label>
                                 <div class="range-row">
-                                    <input type="number" name="age_min" min="1" max="120" placeholder="حداقل">
-                                    <input type="number" name="age_max" min="1" max="120" placeholder="حداکثر">
+                                    <input type="number" name="age_min" min="2" max="100" placeholder="حداقل">
+                                    <input type="number" name="age_max" min="2" max="100" placeholder="حداکثر">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label>قد (سانتی‌متر، بازه)</label>
                                 <div class="range-row">
-                                    <input type="number" name="height_min" min="100" max="250" placeholder="حداقل">
-                                    <input type="number" name="height_max" min="100" max="250" placeholder="حداکثر">
+                                    <input type="number" name="height_min" min="1" max="200" placeholder="حداقل">
+                                    <input type="number" name="height_max" min="1" max="200" placeholder="حداکثر">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label>وزن (کیلوگرم، بازه)</label>
                                 <div class="range-row">
-                                    <input type="number" name="weight_min" min="30" max="200" placeholder="حداقل">
-                                    <input type="number" name="weight_max" min="30" max="200" placeholder="حداکثر">
+                                    <input type="number" name="weight_min" min="5" max="110" placeholder="حداقل">
+                                    <input type="number" name="weight_max" min="5" max="110" placeholder="حداکثر">
                                 </div>
                             </div>
                         </div>
@@ -477,9 +518,8 @@ function mattress_advisor_rules_page() {
                                 <label for="back_curve">گودی کمر</label>
                                 <select name="back_curve" id="back_curve">
                                     <option value="">انتخاب کنید</option>
-                                    <option value="has_curve">مناسب افرادی که گودی کمر دارند</option>
-                                    <option value="supports_curve">تشکِ مناسب گودی کمر</option>
-                                    <option value="not_allowed">در صورت داشتن گودی کمر خرید مجاز نیست</option>
+                                    <option value="has">دارم</option>
+                                    <option value="no">ندارم</option>
                                 </select>
                             </div>
                             <div class="form-group">
