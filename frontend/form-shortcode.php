@@ -204,15 +204,15 @@ function mattress_advisor_form_shortcode() {
                             <img class="field-icon" src="<?php echo esc_url( MATTRESS_ADVISOR_URL . 'assets/' . rawurlencode('age.webp') ); ?>" alt="سن" loading="lazy">
                             <label for="age">سن <span class="required">*</span></label>
                         </div>
-                        <?php $age_value = isset($user_meta['age'][0]) ? intval($user_meta['age'][0]) : 25; ?>
+                        <?php $age_value = isset($user_meta['age'][0]) ? intval($user_meta['age'][0]) : 25; $age_value = max(2, min(100, $age_value)); ?>
                         <div class="enhanced-slider-wrapper">
                             <div class="slider-container">
                                 <div class="range-labels">
-                                    <span class="range-min">5 سال</span>
-                                    <span class="range-max">99 سال</span>
+                                    <span class="range-min">2 سال</span>
+                                    <span class="range-max">100 سال</span>
                                 </div>
                                 <div class="slider-track">
-                                    <input type="range" id="age" name="age" required min="5" max="99" value="<?php echo esc_attr( $age_value ); ?>" class="enhanced-slider">
+                                    <input type="range" id="age" name="age" required min="2" max="100" value="<?php echo esc_attr( $age_value ); ?>" class="enhanced-slider">
                                     <div class="slider-progress"></div>
                                 </div>
                                 <div class="value-display">
@@ -228,15 +228,15 @@ function mattress_advisor_form_shortcode() {
                             <img class="field-icon" src="<?php echo esc_url( MATTRESS_ADVISOR_URL . 'assets/' . rawurlencode('height.webp') ); ?>" alt="قد" loading="lazy">
                             <label for="height">قد <span class="required">*</span></label>
                         </div>
-                        <?php $height_value = isset($user_meta['height'][0]) ? intval($user_meta['height'][0]) : 170; $height_value = max(40, min(230, $height_value)); ?>
+                        <?php $height_value = isset($user_meta['height'][0]) ? intval($user_meta['height'][0]) : 170; $height_value = max(1, min(200, $height_value)); ?>
                         <div class="enhanced-slider-wrapper">
                             <div class="slider-container">
                                 <div class="range-labels">
-                                    <span class="range-min">40 سانتی‌متر</span>
-                                    <span class="range-max">230 سانتی‌متر</span>
+                                    <span class="range-min">1 سانتی‌متر</span>
+                                    <span class="range-max">200 سانتی‌متر</span>
                                 </div>
                                 <div class="slider-track">
-                                    <input type="range" id="height" name="height" required min="40" max="230" value="<?php echo esc_attr( $height_value ); ?>" class="enhanced-slider">
+                                    <input type="range" id="height" name="height" required min="1" max="200" value="<?php echo esc_attr( $height_value ); ?>" class="enhanced-slider">
                                     <div class="slider-progress"></div>
                                 </div>
                                 <div class="value-display">
@@ -252,15 +252,15 @@ function mattress_advisor_form_shortcode() {
                             <img class="field-icon" src="<?php echo esc_url( MATTRESS_ADVISOR_URL . 'assets/' . rawurlencode('Weight.webp') ); ?>" alt="وزن" loading="lazy">
                             <label for="weight">وزن <span class="required">*</span></label>
                         </div>
-                        <?php $weight_value = isset($user_meta['weight'][0]) ? intval($user_meta['weight'][0]) : 7; $weight_value = max(5, min(10, $weight_value)); ?>
+                        <?php $weight_value = isset($user_meta['weight'][0]) ? intval($user_meta['weight'][0]) : 65; $weight_value = max(5, min(110, $weight_value)); ?>
                         <div class="enhanced-slider-wrapper">
                             <div class="slider-container">
                                 <div class="range-labels">
                                     <span class="range-min">5 کیلوگرم</span>
-                                    <span class="range-max">10 کیلوگرم</span>
+                                    <span class="range-max">110 کیلوگرم</span>
                                 </div>
                                 <div class="slider-track">
-                                    <input type="range" id="weight" name="weight" required min="5" max="10" value="<?php echo esc_attr( $weight_value ); ?>" class="enhanced-slider">
+                                    <input type="range" id="weight" name="weight" required min="5" max="110" value="<?php echo esc_attr( $weight_value ); ?>" class="enhanced-slider">
                                     <div class="slider-progress"></div>
                                 </div>
                                 <div class="value-display">
