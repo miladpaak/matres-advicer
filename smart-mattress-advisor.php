@@ -3,7 +3,7 @@
 Plugin Name: راهنمای مشاوره انتخاب تشک رویال مترز
 Plugin URI: https://liamwp.com
 Description: افزونه مشاوره خرید تشک و پیشنهاد محصولات فروشگاه رویال مترز
-Version: 1.0.16
+Version: 1.0.17
 Author: Yousef Rostami
 Author URI: https://liamwp.com
 Text Domain: smart-mattress-advisor
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // مسیرها و نسخه
 define('MATTRESS_ADVISOR_PATH', plugin_dir_path(__FILE__));
 define('MATTRESS_ADVISOR_URL', plugin_dir_url(__FILE__));
-define('MATTRESS_ADVISOR_VERSION', '1.0.1');
+define('MATTRESS_ADVISOR_VERSION', '1.0.17');
 
 // شامل توابع اصلی
 require_once MATTRESS_ADVISOR_PATH . 'includes/functions.php';

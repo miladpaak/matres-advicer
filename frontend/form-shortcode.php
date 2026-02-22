@@ -4,84 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 add_shortcode('mattress_advisor_form', 'mattress_advisor_form_shortcode');
 
 function mattress_advisor_form_shortcode() {
-    // Check if user is logged in
-    if (!is_user_logged_in()) {
-        ob_start();
-        ?>
-        <div class="mattress-wizard login-required">
-            <div class="login-message">
-                <div class="login-box">
-                    <h3>🔐 ورود به حساب کاربری</h3>
-                    <p>برای مشاهده فرم مشاوره تشک، ابتدا وارد حساب کاربری خود شوید.</p>
-                    <div class="login-actions">
-                        <a href="<?php echo wp_login_url(get_permalink()); ?>" class="btn-login">ورود به سایت</a>
-                        <a href="<?php echo wp_registration_url(); ?>" class="btn-register">ثبت نام</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <style>
-        .login-required {
-            max-width: 500px;
-            margin: 40px auto;
-            text-align: center;
-        }
-        .login-box {
-            background: #fff;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            border: 2px solid #4CAF50;
-        }
-        .login-box h3 {
-            color: #4CAF50;
-            margin-bottom: 15px;
-            font-size: 24px;
-        }
-        .login-box p {
-            color: #666;
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
-        .login-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .btn-login, .btn-register {
-            padding: 12px 24px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            display: inline-block;
-        }
-        .btn-login {
-            background: #4CAF50;
-            color: white;
-        }
-        .btn-login:hover {
-            background: #45a049;
-            color: white;
-        }
-        .btn-register {
-            background: #fff;
-            color: #4CAF50;
-            border: 2px solid #4CAF50;
-        }
-        .btn-register:hover {
-            background: #4CAF50;
-            color: white;
-        }
-        </style>
-        <?php
-        return ob_get_clean();
-    }
-
-    // Get current user data for auto-fill
+    // Get current user data for auto-fill (when available)
     $current_user = wp_get_current_user();
-    $user_meta = get_user_meta($current_user->ID);
+    $user_id = isset($current_user->ID) ? intval($current_user->ID) : 0;
+    $user_meta = $user_id > 0 ? get_user_meta($user_id) : [];
     
     // Get WooCommerce billing data if available
     $first_name = '';
@@ -89,11 +15,11 @@ function mattress_advisor_form_shortcode() {
     $mobile = '';
     $province = '';
     
-    if (class_exists('WooCommerce')) {
-        $first_name = get_user_meta($current_user->ID, 'billing_first_name', true) ?: $current_user->first_name;
-        $last_name = get_user_meta($current_user->ID, 'billing_last_name', true) ?: $current_user->last_name;
-        $mobile = get_user_meta($current_user->ID, 'billing_phone', true);
-        $province = get_user_meta($current_user->ID, 'billing_state', true);
+    if ($user_id > 0 && class_exists('WooCommerce')) {
+        $first_name = get_user_meta($user_id, 'billing_first_name', true) ?: $current_user->first_name;
+        $last_name = get_user_meta($user_id, 'billing_last_name', true) ?: $current_user->last_name;
+        $mobile = get_user_meta($user_id, 'billing_phone', true);
+        $province = get_user_meta($user_id, 'billing_state', true);
     } else {
         $first_name = $current_user->first_name;
         $last_name = $current_user->last_name;
